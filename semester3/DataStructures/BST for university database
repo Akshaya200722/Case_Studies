@@ -1,0 +1,150 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct Node {
+    int id;                   
+    char name[100];           
+    struct Node *left, *right; 
+} Node;
+
+/* int id: Typically takes 4 bytes on most systems.
+    char name[100]: An array of 100 characters takes 100 bytes (1 byte per char).
+    struct Node *left and struct Node *right: Each pointer takes 8 bytes on a 64-bit system (4 bytes on a 32-bit system).*/
+
+Node* createNode(int id, char name[]) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->id = id;
+    strcpy(newNode->name, name);
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+Node* insert(Node* root, int id, char name[]) {
+    if (root == NULL) {
+        return createNode(id, name);
+    }
+    if (id < root->id) {
+        root->left = insert(root->left, id, name);
+    } else if (id > root->id) {
+        root->right = insert(root->right, id, name);
+    }
+    return root;
+}
+
+Node* search(Node* root, int id) {
+    if (root == NULL || root->id == id) {
+        return root;
+    }
+    if (id < root->id) {
+        return search(root->left, id);
+    } else {
+        return search(root->right, id);
+    }
+}
+
+/* Find the node with the minimum ID in a subtree as the smaller value must be inserted at left*/
+        
+Node* findMin(Node* node) {
+    while (node && node->left != NULL) {
+        node = node->left;
+    }
+    return node;
+}
+
+Node* deleteNode(Node* root, int id) {
+    if (root == NULL) {
+        return root;
+    }
+    if (id < root->id) {
+        root->left = deleteNode(root->left, id);
+    } else if (id > root->id) {
+        root->right = deleteNode(root->right, id);
+    } else {
+        // Node to be deleted found
+        if (root->left == NULL) {
+            Node* temp = root->right;
+            free(root);
+            return temp;
+        } else if (root->right == NULL) {
+            Node* temp = root->left;
+            free(root);
+            return temp;
+        }
+        // Node with two children
+        Node* temp = findMin(root->right);
+        root->id = temp->id;
+        strcpy(root->name, temp->name);
+        root->right = deleteNode(root->right, temp->id);
+    }
+    return root;
+}
+
+// In-order traversal to display the BST
+void inorderTraversal(Node* root) {
+    if (root != NULL) {
+        inorderTraversal(root->left);
+        printf("ID: %d, Name: %s\n", root->id, root->name);
+        inorderTraversal(root->right);
+    }
+}
+
+int main() {
+    Node* root = NULL;
+    int choice, id;
+    char name[100];
+
+    do {
+        printf("\n--- Student Records System ---\n");
+        printf("1. Insert Student Record\n");
+        printf("2. Search Student Record\n");
+        printf("3. Delete Student Record\n");
+        printf("4. Display All Records\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter Student ID: ");
+                scanf("%d", &id);
+                printf("Enter Student Name: ");
+                scanf(" %[^\n]", name);  // to Read string with spaces
+                root = insert(root, id, name);
+                printf("Student record inserted successfully.\n");
+                break;
+
+            case 2:
+                printf("Enter Student ID to search: ");
+                scanf("%d", &id);
+                Node* foundNode = search(root, id);
+                if (foundNode != NULL) {
+                    printf("Student found: ID = %d, Name = %s\n", foundNode->id, foundNode->name);
+                } else {
+                    printf("Student with ID %d not found.\n", id);
+                }
+                break;
+
+            case 3:
+                printf("Enter Student ID to delete: ");
+                scanf("%d", &id);
+                root = deleteNode(root, id);
+                printf("Student record deleted successfully.\n");
+                break;
+
+            case 4:
+                printf("Displaying all student records:\n");
+                inorderTraversal(root);
+                break;
+
+            case 5:
+                printf("Exiting the program.\n");
+                break;
+
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 5);
+
+    return 0;
+}
