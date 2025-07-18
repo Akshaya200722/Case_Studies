@@ -1,57 +1,99 @@
-import tkinter as tk
-from tkinter import ttk
-from forex_python.converter import CurrencyRates
+import random
+import time
+import matplotlib.pyplot as plt
 
-# Function to convert currency
-def convert_currency():
-    source_currency = source_var.get()
-    target_currency = target_var.get()
-    amount = float(amount_entry.get())
+# Function to generate a math question based on the given level
+def generate_question(level):
+    # Define the range for numbers based on the level
+    if level <= 2:
+        num1 = random.randint(1, 10)
+        num2 = random.randint(1, 10)
+    elif level <= 4:
+        num1 = random.randint(10, 50)
+        num2 = random.randint(10, 50)
+    else:
+        num1 = random.randint(50, 100)
+        num2 = random.randint(50, 100)
 
-    # Fetch current exchange rate
-    c = CurrencyRates()
-    exchange_rate = c.get_rate(source_currency, target_currency)
+    # Choose a random operator
+    operator = random.choice(['+', '-', '*', '/'])
 
-    # Calculate converted amount
-    converted_amount = amount * exchange_rate
+    # Ensure that division questions have integer solutions
+    if operator == '/':
+        num1 = num1 * num2  # ensures num1 is divisible by num2
 
-    # Display converted amount
-    result_label.config(text=f"{amount} {source_currency} = {converted_amount:.2f} {target_currency}")
+    # Construct the question string
+    question = f"What is {num1} {operator} {num2}?"
+    answer = eval(str(num1) + operator + str(num2))
+    return question, round(answer, 2)  # Round for consistency
 
-# Create the main window
-root = tk.Tk()
-root.title("Currency Converter")
+# Main function to run the math quiz
+def main():
+    print("Welcome to the Math Quiz!")
+    
+    total_score = 0
+    scores = []  # List to store scores for each level
 
-# Create dropdown menus for selecting source and target currencies
-source_label = tk.Label(root, text="From:")
-source_label.grid(row=0, column=0, padx=10, pady=5)
-source_var = tk.StringVar()
-source_menu = ttk.Combobox(root, textvariable=source_var)
-source_menu['values'] = ('USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SEK', 'NZD')
-source_menu.grid(row=0, column=1, padx=10, pady=5)
-source_menu.current(0)
+    # Loop through 5 levels
+    for level in range(1, 6):
+        print(f"\nLevel {level}:")
+        print("Answer the following questions:")
 
-target_label = tk.Label(root, text="To:")
-target_label.grid(row=1, column=0, padx=10, pady=5)
-target_var = tk.StringVar()
-target_menu = ttk.Combobox(root, textvariable=target_var)
-target_menu['values'] = ('USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SEK', 'NZD')
-target_menu.grid(row=1, column=1, padx=10, pady=5)
-target_menu.current(1)
+        questions_asked = []
+        level_score = 0
 
-# Entry field for entering amount to convert
-amount_label = tk.Label(root, text="Amount:")
-amount_label.grid(row=2, column=0, padx=10, pady=5)
-amount_entry = tk.Entry(root)
-amount_entry.grid(row=2, column=1, padx=10, pady=5)
+        # Start the time
+        start_time = time.time()
 
-# Button to initiate conversion
-convert_button = tk.Button(root, text="Convert", command=convert_currency)
-convert_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+        # Generate 5 unique questions for each level
+        for _ in range(5):
+            question, answer = generate_question(level)
+            while question in questions_asked:
+                question, answer = generate_question(level)
 
-# Label to display result
-result_label = tk.Label(root, text="")
-result_label.grid(row=4, column=0, columnspan=2, padx=10, pady=5)
+            print(question)
+            user_answer = input("Your answer: ")
+            try:
+                user_answer = float(user_answer)
+                if abs(user_answer - answer) < 0.01:
+                    level_score += 1
+            except ValueError:
+                print("Invalid input! Please enter a number.")
 
-# Start the main loop
-root.mainloop()
+            questions_asked.append(question)
+
+        # End the timer
+        end_time = time.time()
+        level_time = end_time - start_time
+
+        # Display score and time for the level
+        print(f"Score for Level {level}: {level_score}/5")
+        print(f"Time taken for Level {level}: {level_time:.2f} seconds")
+        print(random.choice(["Bravo!!", "Smart!!", "Great!!", "Well done!!", "Fantastic!!"]))
+
+        total_score += level_score
+        scores.append(level_score)
+
+    print("\nCongratulations on completing the game! Well done!")
+
+    # Plotting bar graph
+    plt.figure(figsize=(7, 5))
+    plt.bar(range(1, 6), scores, color='skyblue')
+    plt.title('Scores for Each Level')
+    plt.xlabel('Level')
+    plt.ylabel('Score')
+    plt.xticks(range(1, 6))
+    plt.grid(True)
+    plt.show()
+
+    # Plotting pie chart
+    plt.figure(figsize=(7, 7))
+    plt.pie(scores, labels=[f'Level {i}' for i in range(1, 6)],
+            autopct='%1.1f%%', startangle=140)
+    plt.title('Scores Distribution')
+    plt.axis('equal')
+    plt.show()
+
+# Run the program
+if _name_ == "_main_":
+    main()
