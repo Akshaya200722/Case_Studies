@@ -1,0 +1,147 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_SIZE 100  // Maximum size of the heap
+
+typedef struct {
+    int priority;  
+    int appointmentID;  
+} Patient;
+
+Patient heap[MAX_SIZE];
+int heapSize = 0; 
+
+void swap(Patient *a, Patient *b) {
+    Patient temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void insert(int priority, int appointmentID) {
+    if (heapSize >= MAX_SIZE) {
+        printf("Heap is full. Cannot insert more appointments.\n");
+        return;
+    }
+
+    heapSize++;
+    int i = heapSize - 1;
+    heap[i].priority = priority;
+    heap[i].appointmentID = appointmentID;
+
+    while (i != 0 && heap[(i - 1) / 2].priority < heap[i].priority) {
+        swap(&heap[i], &heap[(i - 1) / 2]);
+        i = (i - 1) / 2;
+    }
+}
+
+void deleteMax() {
+    if (heapSize <= 0) {
+        printf("No appointments to delete.\n");
+        return;
+    }
+
+    printf("Deleted Appointment ID: %d, Priority: %d\n", heap[0].appointmentID, heap[0].priority);
+    heap[0] = heap[heapSize - 1];
+    heapSize--;
+
+    // Heapify from the root to maintain the max-heap property--sorting the remaining data
+    int i = 0;
+    while (2 * i + 1 < heapSize) {
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        int largest = i;
+
+        if (left < heapSize && heap[left].priority > heap[largest].priority) {
+            largest = left;
+        }
+        if (right < heapSize && heap[right].priority > heap[largest].priority) {
+            largest = right;
+        }
+        if (largest != i) {
+            swap(&heap[i], &heap[largest]);
+            i = largest;
+        } else {
+            break;
+        }
+    }
+}
+
+void heapSort() {
+    int originalSize = heapSize;
+
+    for (int i = heapSize - 1; i >= 0; i--) {
+        
+        swap(&heap[0], &heap[i]);
+
+        heapSize--;
+        int j = 0;
+        while (2 * j + 1 < heapSize) {
+            int left = 2 * j + 1;
+            int right = 2 * j + 2;
+            int largest = j;
+
+            if (left < heapSize && heap[left].priority > heap[largest].priority) {
+                largest = left;
+            }
+            if (right < heapSize && heap[right].priority > heap[largest].priority) {
+                largest = right;
+            }
+            if (largest != j) {
+                swap(&heap[j], &heap[largest]);
+                j = largest;
+            } else {
+                break;
+            }
+        }
+    }
+
+    printf("Appointments sorted by priority (highest to lowest):\n");
+    for (int i = 0; i < originalSize; i++) {
+        printf("Appointment ID: %d, Priority: %d\n", heap[i].appointmentID, heap[i].priority);
+    }
+
+    // to Restore original heap size
+    heapSize = originalSize;
+}
+
+int main() {
+    int choice, priority, appointmentID;
+
+    do {
+        printf("\n--- Hospital Scheduling System ---\n");
+        printf("1. Insert Patient Appointment\n");
+        printf("2. Delete Highest Priority Appointment\n");
+        printf("3. Display All Appointments\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter Appointment ID: ");
+                scanf("%d", &appointmentID);
+                printf("Enter Priority (smallerValue=higherPriority): ");
+                scanf("%d", &priority);
+                insert(priority, appointmentID);
+                printf("Appointment inserted successfully.\n");
+                break;
+
+            case 2:
+                deleteMax();
+                break;
+
+            case 3:
+                heapSort();
+                break;
+
+            case 4:
+                printf("Exiting the program.\n");
+                break;
+
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
